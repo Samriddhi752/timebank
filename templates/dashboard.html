@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — TimeBank{% endblock %}
+{% block content %}
+<section class="dashboard-shell">
+  <div class="dashboard-heading"><div><div class="eyebrow">YOUR TIMEBANK</div><h1>Hey, {{ current_user.name.split()[0] }} <span class="wave">✳</span></h1><p class="muted">Here's what's happening in your corner of the community.</p></div><a class="button button-dark" href="{{ url_for('offer_service') }}">+ Offer a service</a></div>
+  <div class="dashboard-stats">
+    <article class="dash-stat wallet-stat"><span class="stat-label">YOUR TIME CREDITS</span><strong>{{ current_user.credits }}</strong><span class="stat-foot">◈ &nbsp; Ready to exchange</span><div class="stat-decoration">◈</div></article>
+    <article class="dash-stat"><span class="stat-label">SERVICES YOU OFFER</span><strong>{{ current_user.services|length }}</strong><span class="stat-foot">Skills shared with your community</span></article>
+    <article class="dash-stat"><span class="stat-label">MEMBER SINCE</span><strong>{{ current_user.created_at.strftime('%b %Y') }}</strong><span class="stat-foot">Every connection starts somewhere</span></article>
+  </div>
+  <div class="dashboard-content-grid">
+    <section class="panel"><div class="panel-heading"><div><div class="eyebrow">YOUR CONTRIBUTION</div><h2>Your services</h2></div><a class="text-link" href="{{ url_for('offer_service') }}">Add new +</a></div>
+      {% if my_services %}
+        <div class="my-service-list">{% for service in my_services %}<div class="my-service-row"><span class="service-mini-icon">{{ '✳' if loop.index % 2 else '↗' }}</span><div class="my-service-info"><b>{{ service.title }}</b><small>{{ service.category }} · {{ service.duration_hours }} hour(s)</small></div><span class="status-tag status-active">Active</span></div>{% endfor %}</div>
+      {% else %}
+        <div class="empty-state"><span class="empty-icon">✳</span><b>Your skills deserve to be shared.</b><p>List your first service and give someone a chance to learn from you.</p><a class="button button-outline button-small" href="{{ url_for('offer_service') }}">Offer your first service</a></div>
+      {% endif %}
+    </section>
+    <section class="panel quick-panel"><div class="eyebrow">MAKE YOUR NEXT MOVE</div><h2>What would you like to do?</h2><a class="quick-link" href="{{ url_for('explore') }}"><span class="quick-icon quick-sage">⌕</span><span><b>Find a service</b><small>Discover skills in your community</small></span><i>→</i></a><a class="quick-link" href="{{ url_for('offer_service') }}"><span class="quick-icon quick-coral">＋</span><span><b>Share a skill</b><small>Turn what you know into credits</small></span><i>→</i></a><a class="quick-link" href="{{ url_for('logout') }}"><span class="quick-icon quick-lilac">↗</span><span><b>Log out</b><small>See you again soon</small></span><i>→</i></a></section>
+  </div>
+</section>
+{% endblock %}

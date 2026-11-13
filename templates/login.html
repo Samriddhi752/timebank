@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Log in — TimeBank{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-aside"><div class="eyebrow eyebrow-light">GOOD TO HAVE YOU BACK</div><h1>Your next<br>exchange is<br><span>waiting.</span></h1><p>Pick up where you left off and make your next hour count.</p><div class="auth-aside-note">◈ &nbsp; Your time. Your community. Your currency.</div></div>
+  <div class="auth-card"><div class="eyebrow">WELCOME BACK</div><h2>Log in to TimeBank</h2><p class="muted">Your community is just a moment away.</p>
+    <form method="POST" class="form-stack">
+      <label>Email address<input name="email" type="email" placeholder="you@example.com" required autocomplete="email"></label>
+      <label>Password<input name="password" type="password" placeholder="Your password" required autocomplete="current-password"></label>
+      <button class="button button-dark button-full" type="submit">Log in <span>↗</span></button>
+    </form>
+    <p class="auth-switch">New to TimeBank? <a href="{{ url_for('signup') }}">Create an account</a></p>
+  </div>
+</section>
+{% endblock %}

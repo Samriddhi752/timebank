@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero section-shell">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="eyebrow-dot"></span> A COMMUNITY THAT RUNS ON TIME</div>
+    <h1>Your time is<br>worth <span class="highlight-word">something.</span></h1>
+    <p class="hero-text">Share what you're good at. Learn something new. Exchange skills with people around you — no money needed, just time.</p>
+    <div class="hero-actions">
+      <a class="button button-dark" href="{{ url_for('signup') }}">Get started <span>↗</span></a>
+      <a class="text-link" href="{{ url_for('explore') }}">Explore services <span>→</span></a>
+    </div>
+    <div class="hero-proof"><div class="avatar-stack"><span>R</span><span>A</span><span>M</span><span>+</span></div><span>Built on skills. Powered by people.</span></div>
+  </div>
+  <div class="hero-art">
+    <div class="art-card art-card-main">
+      <div class="art-topline"><span class="live-dot"></span> YOUR COMMUNITY, IN MOTION</div>
+      <div class="art-illustration">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="center-clock"><span>1</span><small>HOUR</small></div>
+        <div class="float-chip chip-top"><span class="chip-icon chip-sage">✳</span><span><b>Share a skill</b><small>Give an hour</small></span></div>
+        <div class="float-chip chip-bottom"><span class="chip-icon chip-coral">↗</span><span><b>Learn something</b><small>Get an hour</small></span></div>
+      </div>
+      <div class="art-caption"><span>TIME WELL SPENT</span><span>01 / 03</span></div>
+    </div>
+    <div class="mini-note"><span class="note-star">✳</span><span><b>1 hour = 1 credit</b><small>It's that simple.</small></span></div>
+  </div>
+</section>
+
+<section class="stats-strip section-shell">
+  <div><strong>01</strong><span>hour = 1 credit</span></div>
+  <div><strong>100%</strong><span>community powered</span></div>
+  <div><strong>₹0</strong><span>money exchanged</span></div>
+</section>
+
+<section class="how-section section-shell" id="how-it-works">
+  <div class="section-heading">
+    <div><div class="eyebrow">SIMPLE BY DESIGN</div><h2>Give a little. <span>Get a lot.</span></h2></div>
+    <p>No complicated points system. Just people helping people, one hour at a time.</p>
+  </div>
+  <div class="steps-grid">
+    <article class="step-card"><span class="step-number">01</span><div class="step-icon icon-lilac">✳</div><h3>Offer what you know</h3><p>Share a skill, lend a hand or teach something you're good at.</p></article>
+    <article class="step-card"><span class="step-number">02</span><div class="step-icon icon-peach">↗</div><h3>Find what you need</h3><p>Explore your community and request help from someone new.</p></article>
+    <article class="step-card"><span class="step-number">03</span><div class="step-icon icon-mint">◈</div><h3>Exchange time</h3><p>Complete an hour, earn a credit and use it to learn in return.</p></article>
+  </div>
+</section>
+
+<section class="featured-section section-shell">
+  <div class="section-heading">
+    <div><div class="eyebrow">GOOD THINGS ARE HAPPENING</div><h2>Explore what's <span>on offer.</span></h2></div>
+    <a class="text-link" href="{{ url_for('explore') }}">See all services →</a>
+  </div>
+  {% if featured_services %}
+    <div class="service-grid">
+      {% for service in featured_services %}
+        <article class="service-card">
+          <div class="service-card-top"><span class="category-tag">{{ service.category }}</span><span class="service-credit">◈ {{ service.duration_hours }} credits</span></div>
+          <h3>{{ service.title }}</h3><p>{{ service.description|truncate(105) }}</p>
+          <div class="service-card-bottom"><span>By {{ service.owner.name }}</span><a href="{{ url_for('explore') }}">View details →</a></div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-featured"><span>✳</span><div><b>You're early — that's a good thing.</b><p>Be one of the first to share a skill with your community.</p></div><a class="button button-outline button-small" href="{{ url_for('offer_service') if current_user.is_authenticated else url_for('signup') }}">Offer a service</a></div>
+  {% endif %}
+</section>
+
+<section class="bottom-cta section-shell">
+  <div><div class="eyebrow eyebrow-light">YOUR NEXT HOUR COULD CHANGE EVERYTHING</div><h2>Have a skill? It has a place here.</h2><p>Join a community where everyone's time has value.</p></div>
+  <a class="button button-light" href="{{ url_for('signup') }}">Find your people <span>↗</span></a>
+</section>
+{% endblock %}
