@@ -99,10 +99,10 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    my_services = (
-        Service.query.filter_by(owner_id=current_user.id, is_active=True)
-        .order_by(Service.created_at.desc()).limit(4).all()
-    )
+    my_services = Service.query.filter_by(
+        owner_id=current_user.id,
+        is_active=True
+            ).order_by(Service.created_at.desc()).all()
     incoming_count = ExchangeRequest.query.filter_by(
         provider_id=current_user.id, status="pending"
     ).count()
@@ -353,6 +353,33 @@ def offer_service():
     return render_template("offer_service.html", categories=categories)
 
 
+@app.route("/services/<int:service_id>/delete", methods=["POST"])
+@login_required
+def delete_service(service_id):
+    service = db.get_or_404(Service, service_id)
+
+    # Only the person who created the service can delete it.
+    if service.owner_id != current_user.id:
+        abort(403)
+
+    if not service.is_active:
+        flash("This service has already been removed.", "info")
+        return redirect(url_for("dashboard"))
+
+    # Cancel pending requests for this service.
+    for exchange in service.exchange_requests:
+        if exchange.status == "pending":
+            exchange.status = "cancelled"
+
+    # Archive the service instead of permanently deleting it.
+    service.is_active = False
+
+    db.session.commit()
+
+    flash("Your service has been removed successfully.", "success")
+    return redirect(url_for("dashboard"))
+
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template("404.html"), 404
@@ -382,3 +409,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True)
+

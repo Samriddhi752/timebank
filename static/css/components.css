@@ -123,3 +123,40 @@
   .results-caption { margin-top:8px; }
   .nav-actions .nav-logout { display:none; }
 }
+
+
+/* Delete service button */
+
+.delete-service-form {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.delete-service-btn {
+    padding: 7px 13px;
+    border: 1px solid #ead5d0;
+    border-radius: 7px;
+    background: #fff8f6;
+    color: #b66c5d;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-service-btn:hover {
+    background: #f6e5e0;
+    border-color: #d9aaa0;
+    color: #994f42;
+}
+
+@media (max-width: 600px) {
+    .my-service-row {
+        flex-wrap: wrap;
+    }
+
+    .delete-service-form {
+        margin-left: auto;
+    }
+}
