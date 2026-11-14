@@ -6,9 +6,9 @@
   <div class="form-card"><h2>List a service</h2><p class="muted">Tell the community what you'd like to share.</p><form method="POST" class="form-stack">
     <label>Service title<input name="title" placeholder="e.g. Beginner Python tutoring" required maxlength="100"></label>
     <label>Category<select name="category" required><option value="">Choose a category</option>{% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}</select></label>
-    <label>Description<textarea name="description" rows="5" placeholder="What will you help someone learn or do?" required></textarea></label>
-    <label>Hours per session<select name="duration"><option value="1">1 hour · 1 credit</option><option value="2">2 hours · 2 credits</option><option value="3">3 hours · 3 credits</option><option value="4">4 hours · 4 credits</option></select></label>
-    <button class="button button-dark button-full" type="submit">Publish service <span>↗</span></button>
+    <label>Description<textarea name="description" rows="5" maxlength="1200" placeholder="What will you help someone learn or do?" required></textarea><small class="field-hint">Be specific about what the session includes (up to 1,200 characters).</small></label>
+    <label>Hours per session<select name="duration" required><option value="1">1 hour · 1 credit</option><option value="2">2 hours · 2 credits</option><option value="3">3 hours · 3 credits</option><option value="4">4 hours · 4 credits</option></select></label>
+    <button class="button button-dark button-full" type="submit">Publish service <span>↗</span></button><p class="form-privacy-note">Your listing will be visible to other TimeBank members.</p>
   </form></div>
 </section>
 {% endblock %}

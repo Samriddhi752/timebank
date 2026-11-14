@@ -2,7 +2,7 @@
 {% block title %}Explore services — TimeBank{% endblock %}
 {% block content %}
 <section class="page-shell">
-  <div class="page-intro"><div class="eyebrow">A LITTLE KNOWLEDGE GOES A LONG WAY</div><h1>Find your <span>next skill.</span></h1><p class="muted">Explore what people around you are happy to share.</p></div>
+  <div class="page-intro"><div class="eyebrow">A LITTLE KNOWLEDGE GOES A LONG WAY</div><h1>Find your <span>next skill.</span></h1><p class="muted">Explore what people around you are happy to share.</p><div class="results-caption">{{ services|length }} service{{ "s" if services|length != 1 else "" }} available</div></div>
   <form class="search-bar" method="GET" action="{{ url_for('explore') }}"><span>⌕</span><input name="q" value="{{ search }}" placeholder="Search skills, services or categories..."><button class="button button-dark button-small" type="submit">Search</button></form>
   <div class="filter-row"><a class="filter-chip {% if not selected_category %}filter-active{% endif %}" href="{{ url_for('explore', q=search) }}">All services</a>{% for category in categories %}<a class="filter-chip {% if selected_category == category %}filter-active{% endif %}" href="{{ url_for('explore', category=category, q=search) }}">{{ category }}</a>{% endfor %}</div>
   {% if services %}

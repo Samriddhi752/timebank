@@ -17,13 +17,13 @@
             {% if item.status == 'pending' %}
               <div class="exchange-actions">
                 <form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='accept') }}"><button class="button button-dark button-small" type="submit">Accept</button></form>
-                <form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='reject') }}"><button class="button button-outline button-small" type="submit">Decline</button></form>
+                <form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='reject') }}" data-confirm="Decline this exchange request?"><button class="button button-outline button-small" type="submit">Decline</button></form>
               </div>
             {% elif item.status == 'accepted' %}
               <div class="confirmation-box">
                 <p><b>Has the service been completed?</b></p>
                 <p class="confirmation-status">Your confirmation: {{ 'Confirmed' if item.provider_confirmed else 'Waiting' }} · Requester's confirmation: {{ 'Confirmed' if item.requester_confirmed else 'Waiting' }}</p>
-                {% if not item.provider_confirmed %}<form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='confirm') }}"><button class="button button-dark button-small" type="submit">Confirm completion</button></form>{% else %}<span class="confirmation-wait">You've confirmed. Waiting for the requester.</span>{% endif %}
+                {% if not item.provider_confirmed %}<form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='confirm') }}" data-confirm="Confirm that this service has been completed? The credits transfer only after both people confirm."><button class="button button-dark button-small" type="submit">Confirm completion</button></form>{% else %}<span class="confirmation-wait">You've confirmed. Waiting for the requester.</span>{% endif %}
               </div>
             {% elif item.status == 'completed' %}
               <div class="completed-note">✓ Completed {{ item.completed_at.strftime('%d %b %Y') if item.completed_at else '' }} · {{ item.service.duration_hours }} credits transferred to your wallet.</div>
@@ -45,12 +45,12 @@
             <blockquote>{{ item.message }}</blockquote>
             <div class="exchange-meta"><span>◈ {{ item.service.duration_hours }} credits</span><span>{{ item.created_at.strftime('%d %b %Y') }}</span></div>
             {% if item.status == 'pending' %}
-              <div class="exchange-actions"><form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='cancel') }}"><button class="button button-outline button-small" type="submit">Cancel request</button></form></div>
+              <div class="exchange-actions"><form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='cancel') }}" data-confirm="Cancel this exchange request?"><button class="button button-outline button-small" type="submit">Cancel request</button></form></div>
             {% elif item.status == 'accepted' %}
               <div class="confirmation-box">
                 <p><b>Has the service been completed?</b></p>
                 <p class="confirmation-status">Your confirmation: {{ 'Confirmed' if item.requester_confirmed else 'Waiting' }} · Provider's confirmation: {{ 'Confirmed' if item.provider_confirmed else 'Waiting' }}</p>
-                {% if not item.requester_confirmed %}<form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='confirm') }}"><button class="button button-dark button-small" type="submit">Confirm completion</button></form>{% else %}<span class="confirmation-wait">You've confirmed. Waiting for the provider.</span>{% endif %}
+                {% if not item.requester_confirmed %}<form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='confirm') }}" data-confirm="Confirm that this service has been completed? The credits transfer only after both people confirm."><button class="button button-dark button-small" type="submit">Confirm completion</button></form>{% else %}<span class="confirmation-wait">You've confirmed. Waiting for the provider.</span>{% endif %}
               </div>
             {% elif item.status == 'completed' %}
               <div class="completed-note">✓ Completed {{ item.completed_at.strftime('%d %b %Y') if item.completed_at else '' }} · {{ item.service.duration_hours }} credits were paid.</div>
