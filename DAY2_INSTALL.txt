@@ -1,0 +1,24 @@
+TIMEBANK DAY 2 PATCH
+====================
+
+1. Stop the Flask server in VS Code terminal with Ctrl+C.
+2. Extract this ZIP.
+3. Copy the files/folders into your EXISTING TimeBank project folder.
+4. Allow app.py, models.py, templates/index.html and templates/explore.html to be replaced.
+5. Keep your existing instance/timebank.db and venv folder. Do NOT delete them.
+6. The patch includes an updated templates/base.html, so the new CSS and My exchanges navigation link are already wired in.
+7. Run again:
+   python app.py
+
+The new ExchangeRequest table is created automatically by db.create_all().
+Your existing users and services should remain in the database.
+
+DAY 2 TEST:
+- Create/login as User A and offer a service.
+- Open another browser/incognito window and create/login as User B.
+- User B opens Explore, opens the service and sends a request.
+- User A opens My exchanges and accepts/rejects.
+- User B checks My exchanges to see the updated status.
+
+NOTE: This MVP patch implements request creation, accept/reject and cancellation.
+Credit transfer and dual completion confirmation are Day 3 work.

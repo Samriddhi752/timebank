@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My exchanges — TimeBank{% endblock %}
+{% block content %}
+<section class="page-shell">
+  <div class="page-intro"><div class="eyebrow">YOUR COMMUNITY CONNECTIONS</div><h1>My <span>exchanges.</span></h1><p class="muted">Keep track of the skills you're sharing and the ones you're learning.</p></div>
+  <div class="exchange-columns">
+    <section class="exchange-panel">
+      <div class="exchange-panel-heading"><div><div class="eyebrow">COMING YOUR WAY</div><h2>Incoming requests</h2></div><span class="count-bubble">{{ incoming|length }}</span></div>
+      {% if incoming %}
+        {% for item in incoming %}
+          <article class="exchange-card">
+            <div class="exchange-card-top"><span class="category-tag">{{ item.service.category }}</span><span class="status-pill status-{{ item.status }}">{{ item.status }}</span></div>
+            <h3>{{ item.service.title }}</h3>
+            <p class="exchange-person">Requested by <b>{{ item.requester.name }}</b></p>
+            <blockquote>{{ item.message }}</blockquote>
+            <div class="exchange-meta"><span>◈ {{ item.service.duration_hours }} credits</span><span>{{ item.created_at.strftime('%d %b %Y') }}</span></div>
+            {% if item.status == 'pending' %}
+              <div class="exchange-actions">
+                <form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='accept') }}"><button class="button button-dark button-small" type="submit">Accept</button></form>
+                <form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='reject') }}"><button class="button button-outline button-small" type="submit">Decline</button></form>
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="exchange-empty"><span>↙</span><b>No incoming requests yet</b><p>When someone requests one of your services, you'll find it here.</p></div>
+      {% endif %}
+    </section>
+    <section class="exchange-panel">
+      <div class="exchange-panel-heading"><div><div class="eyebrow">WHAT YOU'VE REQUESTED</div><h2>Outgoing requests</h2></div><span class="count-bubble">{{ outgoing|length }}</span></div>
+      {% if outgoing %}
+        {% for item in outgoing %}
+          <article class="exchange-card">
+            <div class="exchange-card-top"><span class="category-tag">{{ item.service.category }}</span><span class="status-pill status-{{ item.status }}">{{ item.status }}</span></div>
+            <h3>{{ item.service.title }}</h3>
+            <p class="exchange-person">Offered by <b>{{ item.provider.name }}</b></p>
+            <blockquote>{{ item.message }}</blockquote>
+            <div class="exchange-meta"><span>◈ {{ item.service.duration_hours }} credits</span><span>{{ item.created_at.strftime('%d %b %Y') }}</span></div>
+            {% if item.status == 'pending' %}
+              <div class="exchange-actions"><form method="POST" action="{{ url_for('update_exchange', exchange_id=item.id, action='cancel') }}"><button class="button button-outline button-small" type="submit">Cancel request</button></form></div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="exchange-empty"><span>↗</span><b>You haven't requested anything</b><p>Explore services and send your first request when something catches your eye.</p><a class="button button-outline button-small" href="{{ url_for('explore') }}">Explore services</a></div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

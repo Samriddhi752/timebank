@@ -1,13 +1,13 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Service
+from models import db, User, Service, ExchangeRequest
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -23,7 +23,10 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    featured_services = Service.query.filter_by(is_active=True).order_by(Service.created_at.desc()).limit(6).all()
+    featured_services = (
+        Service.query.filter_by(is_active=True)
+        .order_by(Service.created_at.desc()).limit(6).all()
+    )
     return render_template("index.html", featured_services=featured_services)
 
 
@@ -75,7 +78,9 @@ def login():
             login_user(user)
             flash(f"Welcome back, {user.name.split()[0]}!", "success")
             next_page = request.args.get("next")
-            return redirect(next_page if next_page and next_page.startswith("/") else url_for("dashboard"))
+            if next_page and next_page.startswith("/") and not next_page.startswith("//"):
+                return redirect(next_page)
+            return redirect(url_for("dashboard"))
 
         flash("Email or password is incorrect. Please try again.", "error")
 
@@ -93,8 +98,22 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    my_services = Service.query.filter_by(owner_id=current_user.id, is_active=True).order_by(Service.created_at.desc()).limit(4).all()
-    return render_template("dashboard.html", my_services=my_services)
+    my_services = (
+        Service.query.filter_by(owner_id=current_user.id, is_active=True)
+        .order_by(Service.created_at.desc()).limit(4).all()
+    )
+    incoming_count = ExchangeRequest.query.filter_by(
+        provider_id=current_user.id, status="pending"
+    ).count()
+    outgoing_count = ExchangeRequest.query.filter_by(
+        requester_id=current_user.id, status="pending"
+    ).count()
+    return render_template(
+        "dashboard.html",
+        my_services=my_services,
+        incoming_count=incoming_count,
+        outgoing_count=outgoing_count
+    )
 
 
 @app.route("/explore")
@@ -107,11 +126,130 @@ def explore():
         query = query.filter_by(category=category)
     if search:
         term = f"%{search}%"
-        query = query.filter(db.or_(Service.title.ilike(term), Service.description.ilike(term), Service.category.ilike(term)))
+        query = query.filter(or_(
+            Service.title.ilike(term),
+            Service.description.ilike(term),
+            Service.category.ilike(term)
+        ))
 
     services = query.order_by(Service.created_at.desc()).all()
     categories = ["Technology", "Creative", "Academic", "Lifestyle", "Music", "Other"]
-    return render_template("explore.html", services=services, categories=categories, selected_category=category, search=search)
+    return render_template(
+        "explore.html",
+        services=services,
+        categories=categories,
+        selected_category=category,
+        search=search
+    )
+
+
+@app.route("/service/<int:service_id>")
+def service_detail(service_id):
+    service = db.get_or_404(Service, service_id)
+    if not service.is_active:
+        abort(404)
+
+    existing_request = None
+    if current_user.is_authenticated:
+        existing_request = ExchangeRequest.query.filter(
+            ExchangeRequest.service_id == service.id,
+            ExchangeRequest.requester_id == current_user.id,
+            ExchangeRequest.status.in_(["pending", "accepted"])
+        ).first()
+
+    return render_template(
+        "service_detail.html",
+        service=service,
+        existing_request=existing_request
+    )
+
+
+@app.route("/service/<int:service_id>/request", methods=["POST"])
+@login_required
+def request_service(service_id):
+    service = db.get_or_404(Service, service_id)
+
+    if not service.is_active:
+        flash("This service is no longer available.", "error")
+        return redirect(url_for("explore"))
+
+    if service.owner_id == current_user.id:
+        flash("You can't request your own service.", "error")
+        return redirect(url_for("service_detail", service_id=service.id))
+
+    existing = ExchangeRequest.query.filter(
+        ExchangeRequest.service_id == service.id,
+        ExchangeRequest.requester_id == current_user.id,
+        ExchangeRequest.status.in_(["pending", "accepted"])
+    ).first()
+
+    if existing:
+        flash("You already have an active request for this service.", "info")
+        return redirect(url_for("exchanges"))
+
+    message = request.form.get("message", "").strip()
+    if not message:
+        flash("Please add a short message with your request.", "error")
+        return redirect(url_for("service_detail", service_id=service.id))
+
+    exchange = ExchangeRequest(
+        service_id=service.id,
+        requester_id=current_user.id,
+        provider_id=service.owner_id,
+        message=message
+    )
+    db.session.add(exchange)
+    db.session.commit()
+
+    flash("Your request has been sent. You'll see updates in My Exchanges.", "success")
+    return redirect(url_for("exchanges"))
+
+
+@app.route("/exchanges")
+@login_required
+def exchanges():
+    incoming = (
+        ExchangeRequest.query.filter_by(provider_id=current_user.id)
+        .order_by(ExchangeRequest.created_at.desc()).all()
+    )
+    outgoing = (
+        ExchangeRequest.query.filter_by(requester_id=current_user.id)
+        .order_by(ExchangeRequest.created_at.desc()).all()
+    )
+    return render_template("exchanges.html", incoming=incoming, outgoing=outgoing)
+
+
+@app.route("/exchanges/<int:exchange_id>/<action>", methods=["POST"])
+@login_required
+def update_exchange(exchange_id, action):
+    exchange = db.get_or_404(ExchangeRequest, exchange_id)
+
+    if exchange.status != "pending":
+        flash("This request has already been updated.", "info")
+        return redirect(url_for("exchanges"))
+
+    if action in ("accept", "reject"):
+        if exchange.provider_id != current_user.id:
+            abort(403)
+        exchange.status = "accepted" if action == "accept" else "rejected"
+        db.session.commit()
+        flash(
+            "Request accepted. You can coordinate the exchange with the requester."
+            if action == "accept" else "Request declined.",
+            "success" if action == "accept" else "info"
+        )
+
+    elif action == "cancel":
+        if exchange.requester_id != current_user.id:
+            abort(403)
+        exchange.status = "cancelled"
+        db.session.commit()
+        flash("Your request has been cancelled.", "info")
+
+    else:
+        abort(404)
+
+    return redirect(url_for("exchanges"))
 
 
 @app.route("/offer", methods=["GET", "POST"])

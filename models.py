@@ -15,7 +15,9 @@ class User(UserMixin, db.Model):
     credits = db.Column(db.Integer, nullable=False, default=3)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    services = db.relationship("Service", backref="owner", lazy=True, cascade="all, delete-orphan")
+    services = db.relationship(
+        "Service", backref="owner", lazy=True, cascade="all, delete-orphan"
+    )
 
 
 class Service(db.Model):
@@ -27,3 +29,17 @@ class Service(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+
+class ExchangeRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey("service.id"), nullable=False)
+    requester_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    provider_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="pending")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    service = db.relationship("Service", backref="exchange_requests")
+    requester = db.relationship("User", foreign_keys=[requester_id])
+    provider = db.relationship("User", foreign_keys=[provider_id])
