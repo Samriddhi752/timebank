@@ -1,10 +1,11 @@
+from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Service, ExchangeRequest
+from models import db, User, Service, ExchangeRequest, Transaction
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -116,6 +117,16 @@ def dashboard():
     )
 
 
+@app.route("/wallet")
+@login_required
+def wallet():
+    transactions = Transaction.query.filter(
+        or_(Transaction.from_user_id == current_user.id,
+            Transaction.to_user_id == current_user.id)
+    ).order_by(Transaction.created_at.desc()).all()
+    return render_template("wallet.html", transactions=transactions)
+
+
 @app.route("/explore")
 def explore():
     category = request.args.get("category", "").strip()
@@ -187,6 +198,13 @@ def request_service(service_id):
         flash("You already have an active request for this service.", "info")
         return redirect(url_for("exchanges"))
 
+    if current_user.credits < service.duration_hours:
+        flash(
+            f"You need {service.duration_hours} credits for this service, but your wallet has {current_user.credits}.",
+            "error"
+        )
+        return redirect(url_for("service_detail", service_id=service.id))
+
     message = request.form.get("message", "").strip()
     if not message:
         flash("Please add a short message with your request.", "error")
@@ -224,27 +242,77 @@ def exchanges():
 def update_exchange(exchange_id, action):
     exchange = db.get_or_404(ExchangeRequest, exchange_id)
 
-    if exchange.status != "pending":
-        flash("This request has already been updated.", "info")
-        return redirect(url_for("exchanges"))
-
     if action in ("accept", "reject"):
         if exchange.provider_id != current_user.id:
             abort(403)
-        exchange.status = "accepted" if action == "accept" else "rejected"
-        db.session.commit()
-        flash(
-            "Request accepted. You can coordinate the exchange with the requester."
-            if action == "accept" else "Request declined.",
-            "success" if action == "accept" else "info"
-        )
+        if exchange.status != "pending":
+            flash("This request has already been updated.", "info")
+        else:
+            exchange.status = "accepted" if action == "accept" else "rejected"
+            db.session.commit()
+            flash(
+                "Request accepted. Once the service is complete, both of you can confirm it here."
+                if action == "accept" else "Request declined.",
+                "success" if action == "accept" else "info"
+            )
 
     elif action == "cancel":
         if exchange.requester_id != current_user.id:
             abort(403)
-        exchange.status = "cancelled"
-        db.session.commit()
-        flash("Your request has been cancelled.", "info")
+        if exchange.status != "pending":
+            flash("Only pending requests can be cancelled.", "info")
+        else:
+            exchange.status = "cancelled"
+            db.session.commit()
+            flash("Your request has been cancelled.", "info")
+
+    elif action == "confirm":
+        if current_user.id not in (exchange.requester_id, exchange.provider_id):
+            abort(403)
+        if exchange.status != "accepted":
+            flash("Only accepted exchanges can be confirmed.", "info")
+            return redirect(url_for("exchanges"))
+
+        # If the other person has already confirmed, check the requester's
+        # balance before recording the final confirmation and transferring credits.
+        other_has_confirmed = (
+            exchange.provider_confirmed if current_user.id == exchange.requester_id
+            else exchange.requester_confirmed
+        )
+        cost = exchange.service.duration_hours
+        if other_has_confirmed and exchange.requester.credits < cost:
+            flash(
+                f"This exchange cannot be completed yet: the requester needs {cost} credits but currently has {exchange.requester.credits}.",
+                "error"
+            )
+            return redirect(url_for("exchanges"))
+
+        if current_user.id == exchange.requester_id:
+            exchange.requester_confirmed = True
+        else:
+            exchange.provider_confirmed = True
+
+        if exchange.requester_confirmed and exchange.provider_confirmed:
+            # The unique exchange_id on Transaction prevents a second transfer.
+            existing_transaction = Transaction.query.filter_by(exchange_id=exchange.id).first()
+            if not existing_transaction:
+                exchange.requester.credits -= cost
+                exchange.provider.credits += cost
+                transaction = Transaction(
+                    exchange_id=exchange.id,
+                    from_user_id=exchange.requester_id,
+                    to_user_id=exchange.provider_id,
+                    credits=cost,
+                    description=f"{exchange.service.title} ({cost} credit{'s' if cost != 1 else ''})"
+                )
+                db.session.add(transaction)
+            exchange.status = "completed"
+            exchange.completed_at = datetime.utcnow()
+            db.session.commit()
+            flash(f"Exchange completed! {cost} credit{'s' if cost != 1 else ''} transferred to {exchange.provider.name}.", "success")
+        else:
+            db.session.commit()
+            flash("Your confirmation has been recorded. The exchange will complete once the other person confirms.", "success")
 
     else:
         abort(404)
@@ -290,8 +358,26 @@ def not_found(error):
     return render_template("404.html"), 404
 
 
+def migrate_day3_columns():
+    """Add Day 3 confirmation fields to existing SQLite databases safely."""
+    inspector = inspect(db.engine)
+    if "exchange_request" not in inspector.get_table_names():
+        return
+    existing_columns = {column["name"] for column in inspector.get_columns("exchange_request")}
+    migrations = {
+        "requester_confirmed": "ALTER TABLE exchange_request ADD COLUMN requester_confirmed BOOLEAN NOT NULL DEFAULT 0",
+        "provider_confirmed": "ALTER TABLE exchange_request ADD COLUMN provider_confirmed BOOLEAN NOT NULL DEFAULT 0",
+        "completed_at": "ALTER TABLE exchange_request ADD COLUMN completed_at DATETIME",
+    }
+    with db.engine.begin() as connection:
+        for column_name, statement in migrations.items():
+            if column_name not in existing_columns:
+                connection.execute(text(statement))
+
+
 with app.app_context():
     db.create_all()
+    migrate_day3_columns()
 
 
 if __name__ == "__main__":

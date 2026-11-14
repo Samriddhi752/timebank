@@ -49,3 +49,32 @@
 .exchange-empty p { color:var(--muted); font-size:10px; max-width:230px; line-height:1.6; margin:5px 0 12px; }
 @media (max-width:800px) { .detail-layout { grid-template-columns:1fr; gap:18px; } .request-card { position:static; } .exchange-columns { grid-template-columns:1fr; } }
 @media (max-width:600px) { .detail-page { padding:35px 18px 60px; } .detail-main { padding:23px; } .detail-main h1 { font-size:31px; } .detail-facts { gap:22px; flex-wrap:wrap; } .exchange-panel { padding:15px; } }
+
+/* Exchange completion and wallet */
+.status-completed { background:#e2efe4; color:#3e7650; }
+.confirmation-box { margin-top:14px; padding:13px; border-radius:9px; background:#f3f6ef; }
+.confirmation-box > p:first-child { margin:0 0 5px; color:#42564a; font-size:11px; }
+.confirmation-status { margin:0 0 10px; color:#7a867e; font-size:9px; line-height:1.6; }
+.confirmation-wait { color:#6c7d70; font-size:10px; font-weight:700; }
+.completed-note { margin-top:13px; padding:10px 12px; border-radius:8px; background:#eaf2e8; color:#4f7659; font-size:10px; line-height:1.6; }
+.wallet-shell { max-width:1000px; }
+.wallet-balance-card { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:30px 34px; margin:28px 0 20px; border-radius:15px; background:#203b39; color:#fffefa; overflow:hidden; }
+.wallet-balance-card .stat-label { color:#b8c9bd; }
+.wallet-balance-card strong { display:block; margin:8px 0 3px; font:800 48px/1 "Manrope"; letter-spacing:-2px; }
+.wallet-balance-card p { margin:9px 0 0; color:#c1d0c6; font-size:11px; }
+.wallet-symbol { font-size:66px; color:#a8c2a9; opacity:.8; }
+.wallet-history { padding:23px; }
+.transaction-list { margin-top:12px; }
+.transaction-row { display:flex; align-items:center; gap:13px; padding:15px 2px; border-top:1px solid var(--line); }
+.transaction-icon { flex:0 0 34px; width:34px; height:34px; display:grid; place-items:center; border-radius:50%; font-size:18px; font-weight:700; }
+.transaction-in { background:#e4efe4; color:#4e795b; }
+.transaction-out { background:#f7e9e4; color:#a96554; }
+.transaction-info { flex:1; min-width:0; }
+.transaction-info b,.transaction-info small { display:block; }
+.transaction-info b { color:#394941; font-size:11px; }
+.transaction-info small { margin-top:4px; color:#89928d; font-size:9px; line-height:1.5; }
+.transaction-amount { font:800 15px "Manrope"; white-space:nowrap; }
+.amount-positive { color:#4e795b; }
+.amount-negative { color:#ad6b5b; }
+.wallet-empty { min-height:190px; }
+@media (max-width:600px) { .wallet-balance-card { padding:23px; } .wallet-balance-card strong { font-size:40px; } .wallet-symbol { font-size:48px; } .wallet-history { padding:16px; } .transaction-row { gap:9px; } }

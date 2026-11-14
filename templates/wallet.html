@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your wallet — TimeBank{% endblock %}
+{% block content %}
+<section class="page-shell wallet-shell">
+  <div class="page-intro"><div class="eyebrow">YOUR TIMEBANK BALANCE</div><h1>Your <span>wallet.</span></h1><p class="muted">Every credit represents an hour of someone's time and effort.</p></div>
+  <section class="wallet-balance-card">
+    <div><div class="stat-label">AVAILABLE TIME CREDITS</div><strong>{{ current_user.credits }}</strong><p>Use credits to receive a service, or earn them by sharing your skills.</p></div>
+    <div class="wallet-symbol">◈</div>
+  </section>
+  <section class="wallet-history panel">
+    <div class="panel-heading"><div><div class="eyebrow">YOUR ACTIVITY</div><h2>Transaction history</h2></div><span class="count-bubble">{{ transactions|length }}</span></div>
+    {% if transactions %}
+      <div class="transaction-list">
+        {% for item in transactions %}
+          <article class="transaction-row">
+            <span class="transaction-icon {{ 'transaction-in' if item.to_user_id == current_user.id else 'transaction-out' }}">{{ '↓' if item.to_user_id == current_user.id else '↑' }}</span>
+            <div class="transaction-info"><b>{{ item.description }}</b><small>{% if item.to_user_id == current_user.id %}Received from {{ item.from_user.name }}{% else %}Paid to {{ item.to_user.name }}{% endif %} · {{ item.created_at.strftime('%d %b %Y, %I:%M %p') }}</small></div>
+            <strong class="transaction-amount {{ 'amount-positive' if item.to_user_id == current_user.id else 'amount-negative' }}">{{ '+' if item.to_user_id == current_user.id else '−' }}{{ item.credits }}</strong>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="exchange-empty wallet-empty"><span>◈</span><b>No transactions yet</b><p>Once an exchange is completed by both people, your credit activity will appear here.</p><a class="button button-outline button-small" href="{{ url_for('explore') }}">Explore services</a></div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

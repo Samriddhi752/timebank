@@ -22,12 +22,13 @@
         <a href="{{ url_for('explore') }}">Explore</a>
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('exchanges') }}">My exchanges</a>
+          <a href="{{ url_for('wallet') }}">Wallet</a>
         {% endif %}
         <a href="{{ url_for('index') }}#how-it-works">How it works</a>
       </nav>
       <div class="nav-actions">
         {% if current_user.is_authenticated %}
-          <a class="credit-pill" href="{{ url_for('dashboard') }}"><span class="coin">◈</span> {{ current_user.credits }} credits</a>
+          <a class="credit-pill" href="{{ url_for('wallet') }}"><span class="coin">◈</span> {{ current_user.credits }} credits</a>
           <a class="button button-dark button-small" href="{{ url_for('dashboard') }}">My dashboard</a>
         {% else %}
           <a class="nav-login" href="{{ url_for('login') }}">Log in</a>
